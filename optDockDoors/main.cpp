@@ -105,4 +105,5 @@ int main()
 
    readInstance(distanceFile,requestsFile);
    M1.run_MIP1();
+   M1.model();
 }
