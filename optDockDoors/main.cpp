@@ -4,6 +4,7 @@
 // globals
 int m;   // number of areas
 int n;   // number of trucks
+int tmax;// capacity
 vector<vector<int>> dist;
 vector<vector<int>> req;
 string solFile; // global
@@ -97,6 +98,7 @@ int main()
    requestsFile   = JSV["requestsFile"];
    distanceFile   = JSV["distanceFile"];
    string solFile = JSV["solFile"];
+   tmax           = JSV["tmax"];         // tempo disponibile caricamento camion, in secondi. Capacità aree
    int TimeLimit  = JSV["TimeLimit"];    // CPLEX time limit
    double epsCost = JSV["epsCost"];      // costo ogni infeasibility
    double forkLiftSpeed = JSV["forkLiftSpeed"]; // velocità carrelli

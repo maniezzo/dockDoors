@@ -18,6 +18,7 @@ using namespace std;
 
 extern int m;   // number of areas
 extern int n;   // number of trucks
+extern int tmax;// time horizon in seconds, capacity
 extern vector<vector<int>> dist;
 extern vector<vector<int>> req;
 extern string solFile; // global

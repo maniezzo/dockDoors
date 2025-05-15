@@ -91,7 +91,7 @@ int MIP1::populateTableau(CPXENVptr env, CPXLPptr lp)
          for(j=0;j<n;j++)
          {
             rmatind.push_back(i*n+j); 
-            rmatval.push_back(1.0); 
+            rmatval.push_back(q[i][j]); 
             numnz++;
          }
          sense.push_back('L');
@@ -116,12 +116,15 @@ int MIP1::populateTableau(CPXENVptr env, CPXLPptr lp)
 
 // calcola il tempo necessario per caricare il camion j sull'area i
 int MIP1::computeTimeRequest(int i, int j)
-{  int k,t=0;
+{  int k;
+   double tload,t=0;
 
    for(k=0;k<4;k++)
-   {  t += round(dist[i][k]*req[j][k]/forkLiftSpeed);
+   {  tload = dist[i][k]/forkLiftSpeed;
+      t += req[j][k]*tload;
+      t += req[i][k] * 150; // da area a camion
    }
-   return t;
+   return round(t);
 }
 
 // Function to run the MIP1 model
@@ -145,10 +148,6 @@ void MIP1::run_MIP1()
    CPXsetintparam(env, CPXPARAM_MIP_Limits_Solutions, 1);
 
    // ---------------------------------------------------- Define the model
-
-   n = 4; // number of jobs
-   m = 2; // number of machines
-
    q.resize(m); // Resize to m rows
    for (i = 0; i < m; ++i) 
    {  q[i].resize(n); // Resize each row to n columns
@@ -165,7 +164,7 @@ void MIP1::run_MIP1()
 
    cap.resize(m);
    for(i=0;i<m;++i)
-      cap[i] = req[i][0];
+      cap[i] = tmax;
 
    populateTableau(env, lp);
    int status = CPXwriteprob (env, lp, "probl.lp", NULL);
