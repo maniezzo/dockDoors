@@ -16,6 +16,12 @@
 
 using namespace std;
 
+extern int m;   // number of areas
+extern int n;   // number of trucks
+extern vector<vector<int>> dist;
+extern vector<vector<int>> req;
+extern string solFile; // global
+
 // Structure to hold callback data, including timing information
 struct CallbackData {
    std::chrono::steady_clock::time_point lastPrintTime; // Last time bounds were printed

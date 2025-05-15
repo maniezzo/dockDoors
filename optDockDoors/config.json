@@ -1,6 +1,6 @@
 { 
-   "instanceFile" : "../generator/inst_300_10_5",
-   "distribFile"  : "../boost_forecast/distr_YW_AR_75.csv",
+   "requestsFile" : "../genDockInstances/requests.csv",
+   "distanceFile" : "../genDockInstances/distances.csv",
    "solFile"   : "results_det.txt",
    "numScen"   : 100,
    "epsCost"   : 1000000,

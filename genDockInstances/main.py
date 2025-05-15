@@ -23,6 +23,7 @@ def computeDistances():
       ta = (30 + 2*np.sqrt((x-coordasrs[0])**2 + (y-coordasrs[1])**2)).astype(int)
       tx = (30 + 2*np.sqrt((x-coordxdock[0])**2 + (y-coordxdock[1])**2)).astype(int)
       df.loc[len(df)] = [tf, tb, ta, tx]
+      df.to_csv("distances.csv", index=False)
    return df
 
 def is_valid(matrix):
@@ -147,5 +148,6 @@ if __name__ == '__main__':
       print("Column Sums:", result.sum(axis=0))
       print("Row Sums:", [r.sum() for r in result])
       dfLoads = pd.DataFrame(result, columns=['tf', 'tb', 'ta', 'tx'])
+      dfLoads.to_csv("requests.csv", index=False)
 
    print('Finito')
