@@ -19,9 +19,8 @@ int readInstance(string distanceFile, string requestsFile)
       return 1;
    }
 
-   vector<vector<int>> dist;
    getline(file, line); // skip header
-   int m = 0;
+   m = 0;
    while (getline(file, line)) 
    {  vector<int> row;
       stringstream ss(line);
@@ -49,8 +48,7 @@ int readInstance(string distanceFile, string requestsFile)
       return 1;
    }
 
-   vector<vector<int>> req;
-   int n = 0;
+   n = 0;
    getline(fileReq, line); // skip header
    while (getline(fileReq, line)) 
    {  vector<int> row;
@@ -101,9 +99,11 @@ int main()
    string solFile = JSV["solFile"];
    int TimeLimit  = JSV["TimeLimit"];    // CPLEX time limit
    double epsCost = JSV["epsCost"];      // costo ogni infeasibility
+   double forkLiftSpeed = JSV["forkLiftSpeed"]; // velocità carrelli
    bool isVerbose = JSV["isVerbose"];
 
    readInstance(distanceFile,requestsFile);
+   M1.forkLiftSpeed = forkLiftSpeed;
    M1.run_MIP1();
    M1.model();
 }

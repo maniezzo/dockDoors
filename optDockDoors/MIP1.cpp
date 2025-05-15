@@ -2,7 +2,7 @@
 // classe contenente la forulazione da internet
 
 
-// The tableu for the basic, non scenario case.
+// The tableu for the basic GAP, non scenario case.
 int MIP1::populateTableau(CPXENVptr env, CPXLPptr lp)
 {  int status,numrows,numcols,numnz;
    int i,j,currMatBeg;
@@ -20,24 +20,15 @@ int MIP1::populateTableau(CPXENVptr env, CPXLPptr lp)
    status = CPXchgobjsen(env, lp, CPX_MIN);  // Problem is minimization
 
    // ------------------------------------------------------ variables section
-
+   
    // Create the columns for x variables
    numcols = 0;
    for(i=0;i<m;i++)
       for(j=0;j<n;j++)
-      {  obj.push_back(xAssCost[i][j]); numcols++;  
+      {  obj.push_back(cost[i][j]); numcols++;  
          lb.push_back(0.0);  
          ub.push_back(1.0); 
          colname.push_back("x"+to_string(i)+"_"+to_string(j));
-      }
-
-   // Create the columns for q variables
-   for(i=0;i<m;i++)
-      for(j=0;j<n;j++)
-      {  obj.push_back(qcost[i]); numcols++;  
-         lb.push_back(0.0);  
-         ub.push_back(maxReq); 
-         colname.push_back("q"+to_string(i)+"_"+to_string(j));
       }
 
    char** cname = new char* [colname.size()];
@@ -49,35 +40,6 @@ int MIP1::populateTableau(CPXENVptr env, CPXLPptr lp)
    if (status)  cout << "ERROR" << endl;
 
    // ------------------------------------------------------ constraints section
-
-   // quantity q constraints.
-   {
-      currMatBeg = 0;
-      numrows = numnz = 0;
-
-      for(j=0;j<n;j++)
-      {  rmatbeg.push_back(currMatBeg);
-         rowname.push_back("q"+to_string(j)); numrows++;
-         for(i=0;i<m;i++)
-         {
-            rmatind.push_back(n*m+i*n+j); 
-            rmatval.push_back(1.0); 
-            numnz++;
-         }
-         sense.push_back('E');
-         rhs.push_back(req[j]);
-         currMatBeg+=m;
-      }
-
-      // vector<string> to char**
-      char** rname = new char* [rowname.size()];
-      for (int index = 0; index < rowname.size(); index++) {
-         rname[index] = const_cast<char*>(rowname[index].c_str());
-      }
-      status = CPXaddrows(env, lp, 0, numrows, numnz, &rhs[0], &sense[0], &rmatbeg[0], &rmatind[0], &rmatval[0], NULL, rname);
-      delete[] rname;
-      if (status)  goto TERMINATE;
-   }
 
    // num assignments x constraints.
    {
@@ -91,15 +53,15 @@ int MIP1::populateTableau(CPXENVptr env, CPXLPptr lp)
       rhs.clear();
       for(j=0;j<n;j++)
       {  rmatbeg.push_back(currMatBeg);
-         rowname.push_back("b"+to_string(j)); numrows++;
+         rowname.push_back("a"+to_string(j)); numrows++;
          for(i=0;i<m;i++)
          {
             rmatind.push_back(i*n+j); 
-            rmatval.push_back(1.0); 
+            rmatval.push_back(1); 
             numnz++;
          }
-         sense.push_back('L');
-         rhs.push_back(b[j]);
+         sense.push_back('E');
+         rhs.push_back(1.0);
          currMatBeg+=m;
       }
 
@@ -128,7 +90,7 @@ int MIP1::populateTableau(CPXENVptr env, CPXLPptr lp)
          rowname.push_back("cap"+to_string(i)); numrows++;
          for(j=0;j<n;j++)
          {
-            rmatind.push_back(n*m+i*n+j); 
+            rmatind.push_back(i*n+j); 
             rmatval.push_back(1.0); 
             numnz++;
          }
@@ -147,49 +109,24 @@ int MIP1::populateTableau(CPXENVptr env, CPXLPptr lp)
       if (status)  goto TERMINATE;
    }
 
-   // q-x linking ocnstraints
-   {
-      currMatBeg = 0;
-      numrows = numnz = 0;
-      rmatbeg.clear();
-      rowname.clear();
-      rmatind.clear();
-      rmatval.clear();
-      sense.clear();
-      rhs.clear();
-      for(i=0;i<m;i++)
-         for(j=0;j<n;j++)
-         {
-            rmatbeg.push_back(currMatBeg);
-            rowname.push_back("xq"+to_string(i)+"_"+to_string(j)); numrows++;
-            rmatind.push_back(n*m+i*n+j); 
-            rmatval.push_back(1.0); 
-            numnz++;
-            rmatind.push_back(i*n+j); 
-            rmatval.push_back(-req[j]); 
-            numnz++;
-            sense.push_back('L');
-            rhs.push_back(0);
-            currMatBeg+=2;
-         }
-
-      // vector<string> to char**
-      char** rname = new char* [rowname.size()];
-      for (int index = 0; index < rowname.size(); index++) 
-      {  rname[index] = const_cast<char*>(rowname[index].c_str());
-      }
-      status = CPXaddrows(env, lp, 0, numrows, numnz, &rhs[0], &sense[0], &rmatbeg[0], &rmatind[0], &rmatval[0], NULL, rname);
-      delete[] rname;
-      if (status)  goto TERMINATE;
-   }
 
    TERMINATE:
    return (status);
 } 
 
+// calcola il tempo necessario per caricare il camion j sull'area i
+int MIP1::computeTimeRequest(int i, int j)
+{  int k,t=0;
+
+   for(k=0;k<4;k++)
+   {  t += round(dist[i][k]*req[j][k]/forkLiftSpeed);
+   }
+   return t;
+}
+
 // Function to run the MIP1 model
 void MIP1::run_MIP1()
-{
+{  int i,j;
    cout << m << endl;
    // Initialize CPLEX environment and problem
    CPXENVptr env = CPXopenCPLEX(NULL);
@@ -212,20 +149,29 @@ void MIP1::run_MIP1()
    n = 4; // number of jobs
    m = 2; // number of machines
 
-   vector<int> p = {4, 3, 2, 5};  // processing times
-   vector<int> d = {10, 6, 8, 9}; // due dates
-
-   int BIG_M = 0;
-   for (int pj : p) BIG_M += pj;
-
-   // Objective
-   for (int j = 0; j < n; ++j) {
-      lp << "+ T_" << j << " ";
+   q.resize(m); // Resize to m rows
+   for (i = 0; i < m; ++i) 
+   {  q[i].resize(n); // Resize each row to n columns
+      for (j = 0; j < n; ++j) 
+         q[i][j] = computeTimeRequest(i,j);
    }
 
+   cost.resize(m); // Resize to m rows
+   for (i = 0; i < m; ++i) 
+   {  cost[i].resize(n); // Resize each row to n columns
+      for (j = 0; j < n; ++j) 
+         cost[i][j] = 1;
+   }
+
+   cap.resize(m);
+   for(i=0;i<m;++i)
+      cap[i] = req[i][0];
+
+   populateTableau(env, lp);
+   int status = CPXwriteprob (env, lp, "probl.lp", NULL);
 
    // ----------------------------------------------------- Solve the model
-   int status = CPXmipopt(env, lp);
+   status = CPXmipopt(env, lp);
    if (status)
    {
       cerr<<"Failed to optimize the model."<<endl;

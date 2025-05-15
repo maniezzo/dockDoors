@@ -6,7 +6,7 @@
    "epsCost"   : 1000000,
    "TimeLimit" : 3600,
    "nrep"      : 5,
-   "nmult"     : 0,     "cmntNmult" : "number of clients with b[i]=2",
+   "forkLiftSpeed" : 2.5,     "cmntNmult" : "velocita madia carrelli in m/s",
    "isQtest"   : false, "cmntQ" : "generate and test different q distributions",
    "isVerbose" : false,
    "isDetmnst" : true
