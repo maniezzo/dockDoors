@@ -204,6 +204,7 @@ int MIP2::populateTableau(CPXENVptr env, CPXLPptr lp, int bigM)
    }
 
    // disjunctive constraints sj + pj \leq si + M(3 - xki -xkj - zjk)
+   if(n>0)
    {
       currMatBeg = 0;
       numrows = numnz = 0;
@@ -213,10 +214,11 @@ int MIP2::populateTableau(CPXENVptr env, CPXLPptr lp, int bigM)
       rmatval.clear();
       sense.clear();
       rhs.clear();
-      for(k=0;k<m;k++)
-         for(i=0;i<n;i++)
+      for(k=0;k<m;k++) // m
+         for(i=0;i<n;i++)  // n
          {  for(j=0;j<n;j++)
-            {
+            {  if(j==i) continue;
+
                rmatbeg.push_back(currMatBeg);
                rowname.push_back("d"+to_string(i)+to_string(j)+to_string(k)); 
                numrows++;
@@ -238,7 +240,7 @@ int MIP2::populateTableau(CPXENVptr env, CPXLPptr lp, int bigM)
                rmatval.push_back(-1); 
                numnz++;
                rmatind.push_back(starts+j); 
-               rmatval.push_back(-1); 
+               rmatval.push_back(1); 
                numnz++;
 
                sense.push_back('L');
