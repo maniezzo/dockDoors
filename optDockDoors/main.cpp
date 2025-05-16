@@ -159,6 +159,6 @@ int main()
    readInstance(distanceFile,requestsFile);
    M1.forkLiftSpeed = forkLiftSpeed;
    //M1.run_MIP1(TimeLimit,isVerbose);
+   M2.forkLiftSpeed = forkLiftSpeed;
    M2.run_MIP2(TimeLimit,isVerbose);
-   M2.model();
 }
