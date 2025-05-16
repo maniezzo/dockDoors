@@ -10,8 +10,7 @@ vector<vector<int>> req;
 string solFile; // global
 
 int readInstance(string distanceFile, string requestsFile)
-{
-   string line;
+{  string line;
 
    // read distances among areas
    ifstream file(distanceFile);
@@ -35,7 +34,8 @@ int readInstance(string distanceFile, string requestsFile)
    }
    file.close();
 
-   // Print the data to verify
+   // Print distance data to verify
+   cout<<"Distance matrix:"<<endl;
    for (const auto& row : dist) 
    {  for (int val : row)
          cout << val << " ";
@@ -64,7 +64,8 @@ int readInstance(string distanceFile, string requestsFile)
    }
    fileReq.close();
 
-   // Print the data to verify
+   // Print request data to verify
+   cout<<"Request matrix:"<<endl;
    for (const auto& row : req) 
    {  for (int val : row)
       cout << val << " ";
@@ -72,6 +73,55 @@ int readInstance(string distanceFile, string requestsFile)
    }
 
    return 0;
+}
+
+
+// callback, returns lower and upper bounds
+int CPXPUBLIC myCallbackFunction(CPXCENVptr env, void* cbdata, int wherefrom, void* cbhandle)
+{  int status=0,numsec;
+   double bestObjVal=-1, incumbObjVal=-1;
+   // Cast the callback handle to our custom data structure
+   CallbackData *data = static_cast<CallbackData*>(cbhandle);
+
+   // Get the current time
+   auto currentTime = chrono::steady_clock::now();
+
+   // Calculate time elapsed since the last print
+   chrono::duration<double> elapsedTime = currentTime - data->lastPrintTime;
+
+   // Check if numsec seconds have passed
+   numsec = 600;
+   if (elapsedTime.count() >= numsec) 
+   {  status = CPXgetcallbackinfo (env, cbdata, wherefrom, CPX_CALLBACK_INFO_BEST_INTEGER, &bestObjVal);
+      if ( status ) 
+      {  cout<<"error " << status << " in CPXgetcallbackinfo"<<endl;
+         status = 1;
+         goto TERMINATE;
+      }
+
+      status = CPXgetcallbackinfo (env, cbdata, wherefrom, CPX_CALLBACK_INFO_BEST_REMAINING, &incumbObjVal);
+      if ( status ) 
+      {  cout<<"error " << status << " in CPXgetcallbackinfo"<<endl;
+         status = 1;
+         goto TERMINATE;
+      }
+
+      // Print the bounds (if both were retrieved)
+      cout << "-----> " << " elapsed " << elapsedTime.count() << " secs: zub: " << bestObjVal << ", zlb: " << incumbObjVal << endl;
+
+      // Reset the timer
+      data->lastPrintTime = currentTime;
+      // Open the file in append mode (std::ios::app)
+      ofstream outFile(solFile,std::ios::app);
+      if (!outFile)
+         cout<<"Error opening output file: "<<solFile<<endl;
+      else
+      {  outFile << "elapsed " << elapsedTime.count() << " zlb " << incumbObjVal << " zub " << bestObjVal << endl;
+         outFile.close();
+      }
+   }
+   TERMINATE:
+   return status; // Zero return indicates success
 }
 
 int main()
@@ -106,6 +156,6 @@ int main()
 
    readInstance(distanceFile,requestsFile);
    M1.forkLiftSpeed = forkLiftSpeed;
-   M1.run_MIP1();
+   M1.run_MIP1(TimeLimit,isVerbose);
    M1.model();
 }
