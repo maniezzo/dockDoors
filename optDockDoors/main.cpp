@@ -1,5 +1,6 @@
 #include "common.h"
 #include "MIP1.h"
+#include "MIP2.h"
 
 // globals
 int m;   // number of areas
@@ -130,6 +131,7 @@ int main()
    stringstream ss;
 
    MIP1 M1;
+   MIP2 M2;
 
    srand(995);
    //srand(time(NULL));
@@ -156,6 +158,7 @@ int main()
 
    readInstance(distanceFile,requestsFile);
    M1.forkLiftSpeed = forkLiftSpeed;
-   M1.run_MIP1(TimeLimit,isVerbose);
-   M1.model();
+   //M1.run_MIP1(TimeLimit,isVerbose);
+   M2.run_MIP2(TimeLimit,isVerbose);
+   M2.model();
 }

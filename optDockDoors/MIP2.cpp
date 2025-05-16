@@ -1,8 +1,8 @@
-#include "MIP1.h"
-// classe contenente la forulazione GAP
+#include "MIP2.h"
+// classe contenente la forulazione internet
 
-// Function to run the MIP1 GAP model
-void MIP1::run_MIP1(int timeLimit, bool isVerbose)
+// Function to run the MIP2 internet model
+void MIP2::run_MIP2(int timeLimit, bool isVerbose)
 {  int i,j;
 
    m++;
@@ -35,6 +35,16 @@ void MIP1::run_MIP1(int timeLimit, bool isVerbose)
 
    sol.resize(m);
 
+   n = 4; // number of jobs (trucks)
+   m = 2; // number of machines (areas)
+
+   vector<int> p = {4, 3, 2, 5}; // processing times
+   vector<int> d = {10, 6, 8, 9}; // due dates
+
+   int BIG_M = 0;
+   for (int pj : p) BIG_M += pj;
+
+
    tuple<int,int,int,float,float,double,double> res = callCPLEX(timeLimit,isVerbose);
    checkSol();
 
@@ -59,7 +69,7 @@ void MIP1::run_MIP1(int timeLimit, bool isVerbose)
 }
 
 // checks the feasibility of the solution
-void MIP1::checkSol()
+void MIP2::checkSol()
 {  int i,j,k,load;
 
    for(j=0;j<n;j++)
@@ -86,9 +96,9 @@ lFound: continue;
 }
 
 // The tableau for the basic GAP, non scenario case.
-int MIP1::populateTableau(CPXENVptr env, CPXLPptr lp)
+int MIP2::populateTableau(CPXENVptr env, CPXLPptr lp)
 {  int status,numrows,numcols,numnz;
-   int i,j,currMatBeg;
+   int i,j,k,currMatBeg;
    vector<double> obj;
    vector<double> lb;
    vector<double> ub;
@@ -103,21 +113,67 @@ int MIP1::populateTableau(CPXENVptr env, CPXLPptr lp)
    status = CPXchgobjsen(env, lp, CPX_MIN);  // Problem is minimization
 
    // ------------------------------------------------------ variables section
-   
-   // Create the columns for x variables
+   // Variabili: x_ij, z_ij, s_j, c_j, t_j, Tmax
+   int Tsup = 50000; // massima tardiness possibile
+
+   // Create the columns for x variables, job j assigned to area i
    numcols = 0;
    for(i=0;i<m;i++)
       for(j=0;j<n;j++)
-      {  obj.push_back(cost[i][j]); numcols++;  
+         {  obj.push_back(1);
+            lb.push_back(0.0);  
+            ub.push_back(1.0); 
+            colname.push_back("x"+to_string(i)+"_"+to_string(j));
+            numcols++;
+         }
+
+   // Create the columns for z variables, i before j
+   for(i=0;i<n;i++)
+      for(j=0;j<n;j++)
+      {  obj.push_back(1);
          lb.push_back(0.0);  
          ub.push_back(1.0); 
-         colname.push_back("x"+to_string(i)+"_"+to_string(j));
+         colname.push_back("z"+to_string(i)+"_"+to_string(j));
+         numcols++;
       }
+
+   // Create the columns for s variables, start times
+   for(j=0;j<n;j++)
+   {  obj.push_back(1);
+      lb.push_back(0.0);  
+      ub.push_back(Tsup); 
+      colname.push_back("s"+to_string(j));
+      numcols++;
+   }
+
+   // Create the columns for c variables, completion times
+   for(j=0;j<n;j++)
+   {  obj.push_back(1);
+      lb.push_back(0.0);  
+      ub.push_back(Tsup); 
+      colname.push_back("c"+to_string(j));
+      numcols++;
+   }
+
+   // Create the columns for t variables, tardinesses
+   for(j=0;j<n;j++)
+   {  obj.push_back(1);
+      lb.push_back(0.0);  
+      ub.push_back(Tsup); 
+      colname.push_back("t"+to_string(j));
+      numcols++;
+   }
+
+   // Create the columns for Tmax variable, max tardiness
+   obj.push_back(1);
+   lb.push_back(0.0);  
+   ub.push_back(Tsup); 
+   colname.push_back("Tmax");
+   numcols++;
 
    char** cname = new char* [colname.size()];
    for (int index = 0; index < colname.size(); index++)
-   {
-      cname[index] = const_cast<char*>(colname[index].c_str());
+   {  cname[index] = const_cast<char*>(colname[index].c_str());
       colnames.push_back(colname[index]);
    }
    status = CPXnewcols(env, lp, numcols, &obj[0], &lb[0], &ub[0], NULL, cname);
@@ -161,7 +217,7 @@ int MIP1::populateTableau(CPXENVptr env, CPXLPptr lp)
       if (status)  goto TERMINATE;
    }
 
-   // capacity constraints
+   // disjunctive constraints sj + pj \leq si + M(3 - xki -xkj - zjk)
    {
       currMatBeg = 0;
       numrows = numnz = 0;
@@ -171,19 +227,20 @@ int MIP1::populateTableau(CPXENVptr env, CPXLPptr lp)
       rmatval.clear();
       sense.clear();
       rhs.clear();
-      for(i=0;i<m;i++)
-      {  rmatbeg.push_back(currMatBeg);
-         rowname.push_back("cap"+to_string(i)); numrows++;
-         for(j=0;j<n;j++)
-         {
-            rmatind.push_back(i*n+j); 
-            rmatval.push_back(q[i][j]); 
-            numnz++;
+      for(k=0;k<m;k++)
+         for(i=0;i<n;i++)
+         {  for(j=0;j<n;j++)
+            {
+               rmatbeg.push_back(currMatBeg);
+               rowname.push_back("d"+to_string(i)); numrows++;
+               rmatind.push_back(i*n+j); 
+               rmatval.push_back(q[i][j]); 
+               numnz++;
+            }
+            sense.push_back('L');
+            rhs.push_back(cap[i]);
+            currMatBeg+=n;
          }
-         sense.push_back('L');
-         rhs.push_back(cap[i]);
-         currMatBeg+=n;
-      }
 
       // vector<string> to char**
       char** rname = new char* [rowname.size()];
@@ -197,16 +254,79 @@ int MIP1::populateTableau(CPXENVptr env, CPXLPptr lp)
 
    TERMINATE:
    return (status);
+
+   /*
+
+   // Completion time
+   for (int j = 0; j < n; ++j) {
+      lp << " complete_" << j << ": "
+         << var("C", j) << " - " << var("S", j)
+         << " = " << p[j] << "\n";
+   }
+
+   // Tardiness
+   for (int j = 0; j < n; ++j) {
+      lp << " tardiness_" << j << "_1: "
+         << var("T", j) << " - " << var("C", j)
+         << " >= " << -d[j] << "\n";
+      lp << " tardiness_" << j << "_2: "
+         << var("T", j) << " >= 0\n";
+   }
+
+   // Disjunctive constraints
+   for (int i = 0; i < m; ++i) {
+      for (int j = 0; j < n; ++j) {
+         for (int k = 0; k < n; ++k) {
+            if (j == k) continue;
+            string xij = var("x", i, j);
+            string xik = var("x", i, k);
+            string sj = var("S", j);
+            string sk = var("S", k);
+            string zjk = var("z", j, k);
+
+            string tag1 = "precede_" + to_string(i) + "_" + to_string(j) + "_" + to_string(k) + "_1";
+            string tag2 = "precede_" + to_string(i) + "_" + to_string(j) + "_" + to_string(k) + "_2";
+
+            // Only enforce if both assigned to same machine
+            lp << tag1 << ": "
+               << sj << " + " << p[j] << " - " << sk
+               << " <= " << BIG_M << " * (2 - " << xij << " - " << xik << " + " << zjk << ")\n";
+
+            lp << tag2 << ": "
+               << sk << " + " << p[k] << " - " << sj
+               << " <= " << BIG_M << " * (2 - " << xij << " - " << xik << " + 1 - " << zjk << ")\n";
+         }
+      }
+   }
+
+   // Variable declarations
+   lp << "Bounds\n";
+   for (int j = 0; j < n; ++j) {
+      lp << " " << var("S", j) << " >= 0\n";
+      lp << " " << var("C", j) << " >= 0\n";
+      lp << " " << var("T", j) << " >= 0\n";
+   }
+
+   lp << "Binary\n";
+   for (int i = 0; i < m; ++i)
+      for (int j = 0; j < n; ++j)
+         lp << " " << var("x", i, j) << "\n";
+
+   for (int j = 0; j < n; ++j)
+      for (int k = 0; k < n; ++k)
+         if (j != k)
+            lp << " " << var("z", j, k) << "\n";
+   */
 } 
 
 // Helper function to name variables
-string MIP1::var(const string& base, int i, int j = -1) 
+string MIP2::var(const string& base, int i, int j = -1) 
 {  if (j == -1) return base + "_" + to_string(i);
    return base + "_" + to_string(i) + "_" + to_string(j);
 }
 
 // calcola il tempo necessario per caricare il camion j sull'area i
-int MIP1::computeTimeRequest(int i, int j)
+int MIP2::computeTimeRequest(int i, int j)
 {  int k;
    double tload,t=0;
 
@@ -219,7 +339,7 @@ int MIP1::computeTimeRequest(int i, int j)
 }
 
 // Function to call CPLEX and solve the model
-tuple<int,int,int,float,float,double,double> MIP1::callCPLEX(int timeLimit, bool isVerbose)
+tuple<int,int,int,float,float,double,double> MIP2::callCPLEX(int timeLimit, bool isVerbose)
 {  int      solstat;
    double   objval,zlb,lbfinal;
    vector<double> x;
@@ -240,7 +360,7 @@ tuple<int,int,int,float,float,double,double> MIP1::callCPLEX(int timeLimit, bool
 
    // Initialize CPLEX environment and problem
    CPXENVptr env = CPXopenCPLEX(NULL);
-   CPXLPptr  lp  = CPXcreateprob(env, NULL, "MIP1");
+   CPXLPptr  lp  = CPXcreateprob(env, NULL, "MIP2");
    if (env==NULL)
    {  char  errmsg[CPXMESSAGEBUFSIZE];
       cout << "Could not open CPLEX environment." << endl;
@@ -272,7 +392,7 @@ tuple<int,int,int,float,float,double,double> MIP1::callCPLEX(int timeLimit, bool
    cur_numrows = CPXgetnumrows(env, lp);
    cur_numcols = CPXgetnumcols(env, lp);
    cout << "LP model; ncol=" << cur_numcols << " nrows=" << cur_numrows << endl;
-   //status = CPXwriteprob (env, lp, "probl.lp", NULL);
+   status = CPXwriteprob (env, lp, "probl.lp", NULL);
 
    // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> LP <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
    cout<<"Solving LP relaxation..."<<endl;
@@ -392,4 +512,98 @@ TERMINATE:
    CPXcloseCPLEX(&env);
    tuple<int,int,int,float,float,double,double> res = make_tuple(status,cur_numcols,cur_numrows,zlb,objval,lbfinal,total_time);
    return res;
+}
+
+int MIP2::model() 
+{  const int n = 4; // number of jobs
+   const int m = 2; // number of machines
+
+   vector<int> p = {4, 3, 2, 5}; // processing times
+   vector<int> d = {10, 6, 8, 9}; // due dates
+
+   int BIG_M = 0;
+   for (int pj : p) BIG_M += pj;
+
+   ofstream lp("model.lp");
+
+   // Objective
+   lp << "Minimize\n obj: ";
+   for (int j = 0; j < n; ++j) {
+      lp << "+ T_" << j << " ";
+   }
+   lp << "\nSubject To\n";
+
+   // Each job assigned to one machine
+   for (int j = 0; j < n; ++j) {
+      lp << " assign_" << j << ": ";
+      for (int i = 0; i < m; ++i)
+         lp << "+ " << var("x", i, j) << " ";
+      lp << "= 1\n";
+   }
+
+   // Completion time
+   for (int j = 0; j < n; ++j) {
+      lp << " complete_" << j << ": "
+         << var("C", j) << " - " << var("S", j)
+         << " = " << p[j] << "\n";
+   }
+
+   // Tardiness
+   for (int j = 0; j < n; ++j) {
+      lp << " tardiness_" << j << "_1: "
+         << var("T", j) << " - " << var("C", j)
+         << " >= " << -d[j] << "\n";
+      lp << " tardiness_" << j << "_2: "
+         << var("T", j) << " >= 0\n";
+   }
+
+   // Disjunctive constraints
+   for (int i = 0; i < m; ++i) {
+      for (int j = 0; j < n; ++j) {
+         for (int k = 0; k < n; ++k) {
+            if (j == k) continue;
+            string xij = var("x", i, j);
+            string xik = var("x", i, k);
+            string sj = var("S", j);
+            string sk = var("S", k);
+            string zjk = var("z", j, k);
+
+            string tag1 = "precede_" + to_string(i) + "_" + to_string(j) + "_" + to_string(k) + "_1";
+            string tag2 = "precede_" + to_string(i) + "_" + to_string(j) + "_" + to_string(k) + "_2";
+
+            // Only enforce if both assigned to same machine
+            lp << tag1 << ": "
+               << sj << " + " << p[j] << " - " << sk
+               << " <= " << BIG_M << " * (2 - " << xij << " - " << xik << " + " << zjk << ")\n";
+
+            lp << tag2 << ": "
+               << sk << " + " << p[k] << " - " << sj
+               << " <= " << BIG_M << " * (2 - " << xij << " - " << xik << " + 1 - " << zjk << ")\n";
+         }
+      }
+   }
+
+   // Variable declarations
+   lp << "Bounds\n";
+   for (int j = 0; j < n; ++j) {
+      lp << " " << var("S", j) << " >= 0\n";
+      lp << " " << var("C", j) << " >= 0\n";
+      lp << " " << var("T", j) << " >= 0\n";
+   }
+
+   lp << "Binary\n";
+   for (int i = 0; i < m; ++i)
+      for (int j = 0; j < n; ++j)
+         lp << " " << var("x", i, j) << "\n";
+
+   for (int j = 0; j < n; ++j)
+      for (int k = 0; k < n; ++k)
+         if (j != k)
+            lp << " " << var("z", j, k) << "\n";
+
+   lp << "End\n";
+   lp.close();
+
+   cout << "Model written to model.lp\n";
+   return 0;
 }
