@@ -1,8 +1,8 @@
-#include "MIP2.h"
-// classe contenente la forulazione internet
+#include "MIP3.h"
+// classe contenente la forulazione mia
 
-// Function to run the MIP2 internet model
-void MIP2::run_MIP2(int timeLimit, bool isVerbose)
+// Function to run the MIP3 internet model
+void MIP3::run_MIP3(int timeLimit, bool isVerbose)
 {  int i,j;
 
    // ---------------------------------------------------- Define the model
@@ -58,7 +58,7 @@ void MIP2::run_MIP2(int timeLimit, bool isVerbose)
 }
 
 // checks the feasibility of the solution
-void MIP2::checkSol()
+void MIP3::checkSol()
 {  int i,j,k,load;
 
    for(j=0;j<n;j++)
@@ -74,10 +74,10 @@ lFound: continue;
 }
 
 // The tableau for the basic GAP, non scenario case.
-int MIP2::populateTableau(CPXENVptr env, CPXLPptr lp, int bigM)
+int MIP3::populateTableau(CPXENVptr env, CPXLPptr lp, int bigM)
 {  int status,numrows,numcols,numnz;
    int i,j,k,currMatBeg;
-   int startx, startz, starts, startc, startt, startTmax; // inidici inizio di ogni tipo di variabile
+   int startx, starty, startz, starts, startc, startt, startTmax; // inidici inizio di ogni tipo di variabile
    vector<double> obj;
    vector<double> lb;
    vector<double> ub;
@@ -95,23 +95,34 @@ int MIP2::populateTableau(CPXENVptr env, CPXLPptr lp, int bigM)
    // Variabili: x_ij, z_ij, s_j, c_j, t_j, Tmax
    int Tsup = 50000; // massima tardiness possibile
 
-   // Create the columns for x variables, job j assigned to area i
+   // Create the columns for x variables, job i assigned to area k
    numcols = 0;
    startx = 0;
-   for(i=0;i<m;i++)
-      for(j=0;j<n;j++)
-         {  obj.push_back(0.0);
+   for(i=0;i<n;i++)
+      for(k=0;k<m;k++)
+         {  obj.push_back(1.0);
             lb.push_back(0.0);  
             ub.push_back(1.0); 
-            colname.push_back("x"+to_string(i)+"_"+to_string(j));
+            colname.push_back("x"+to_string(i)+"_"+to_string(k));
             numcols++;
          }
 
-   // Create the columns for z variables, i before j
+   // Create the columns for y variables, i before j
+   starty = numcols;
+   for(i=0;i<n;i++)
+      for(j=0;j<n;j++)
+      {  obj.push_back(1.0);
+         lb.push_back(0.0);  
+         ub.push_back(1.0); 
+         colname.push_back("y"+to_string(i)+"_"+to_string(j));
+         numcols++;
+      }
+
+   // Create the columns for z variables, i above j
    startz = numcols;
    for(i=0;i<n;i++)
       for(j=0;j<n;j++)
-      {  obj.push_back(0.0);
+      {  obj.push_back(1.0);
          lb.push_back(0.0);  
          ub.push_back(1.0); 
          colname.push_back("z"+to_string(i)+"_"+to_string(j));
@@ -121,7 +132,7 @@ int MIP2::populateTableau(CPXENVptr env, CPXLPptr lp, int bigM)
    // Create the columns for s variables, start times
    starts = numcols;
    for(j=0;j<n;j++)
-   {  obj.push_back(0);
+   {  obj.push_back(1.0);
       lb.push_back(0.0);  
       ub.push_back(Tsup); 
       colname.push_back("s"+to_string(j));
@@ -131,7 +142,7 @@ int MIP2::populateTableau(CPXENVptr env, CPXLPptr lp, int bigM)
    // Create the columns for c variables, completion times
    startc = numcols;
    for(j=0;j<n;j++)
-   {  obj.push_back(0);
+   {  obj.push_back(1.0);
       lb.push_back(0.0);  
       ub.push_back(Tsup); 
       colname.push_back("c"+to_string(j));
@@ -141,7 +152,7 @@ int MIP2::populateTableau(CPXENVptr env, CPXLPptr lp, int bigM)
    // Create the columns for t variables, tardinesses
    startt = numcols;
    for(j=0;j<n;j++)
-   {  obj.push_back(1);
+   {  obj.push_back(1.0);
       lb.push_back(0.0);  
       ub.push_back(Tsup); 
       colname.push_back("t"+to_string(j));
@@ -150,7 +161,7 @@ int MIP2::populateTableau(CPXENVptr env, CPXLPptr lp, int bigM)
 
    // Create the columns for Tmax variable, max tardiness
    startTmax = numcols;
-   obj.push_back(0); // obiettivo: min total tardiness, non min max
+   obj.push_back(1.0); // obiettivo: min total tardiness, non min max
    lb.push_back(0.0);  
    ub.push_back(Tsup); 
    colname.push_back("Tmax");
@@ -178,13 +189,12 @@ int MIP2::populateTableau(CPXENVptr env, CPXLPptr lp, int bigM)
       rmatval.clear();
       sense.clear();
       rhs.clear();
-      for(j=0;j<n;j++)
+      for(i=0;i<n;i++)
       {  rmatbeg.push_back(currMatBeg);
-         rowname.push_back("a"+to_string(j)); 
+         rowname.push_back("a"+to_string(i)); 
          numrows++;
-         for(i=0;i<m;i++)
-         {
-            rmatind.push_back(i*n+j); 
+         for(k=0;k<m;k++)
+         {  rmatind.push_back(i*m+k); 
             rmatval.push_back(1); 
             numnz++;
          }
@@ -203,7 +213,7 @@ int MIP2::populateTableau(CPXENVptr env, CPXLPptr lp, int bigM)
       if (status)  goto TERMINATE;
    }
 
-   // disjunctive constraints sj + pj \leq si + M(3 - xki -xkj - zjk)
+   // horizontal constraints i -> j
    {
       currMatBeg = 0;
       numrows = numnz = 0;
@@ -213,44 +223,207 @@ int MIP2::populateTableau(CPXENVptr env, CPXLPptr lp, int bigM)
       rmatval.clear();
       sense.clear();
       rhs.clear();
-      for(k=0;k<m;k++) // m
-         for(i=0;i<n;i++)  // n
-         {  for(j=0;j<n;j++)
-            {  if(j==i) continue;
+      for(i=0;i<n;i++) 
+      {  for(j=0;j<n;j++)
+         {  if(j==i) continue;
 
-               rmatbeg.push_back(currMatBeg);
-               rowname.push_back("d"+to_string(i)+to_string(j)+to_string(k)); 
-               numrows++;
+            rmatbeg.push_back(currMatBeg);
+            rowname.push_back("h"+to_string(i)+to_string(j)); 
+            numrows++;
 
-               // Mxki
-               rmatind.push_back(k*n+i); 
-               rmatval.push_back(bigM); 
-               numnz++;
-               // Mxkj
-               rmatind.push_back(k*n+j); 
-               rmatval.push_back(bigM); 
-               numnz++;
-               // Mzij
-               rmatind.push_back(startz+i*n+j); 
-               rmatval.push_back(bigM); 
-               numnz++;
-               // -si+sj
-               rmatind.push_back(starts+i); 
-               rmatval.push_back(-1); 
-               numnz++;
-               rmatind.push_back(starts+j); 
-               rmatval.push_back(1); 
-               numnz++;
+            rmatind.push_back(starty + i*n+j); 
+            rmatval.push_back(1.0); 
+            numnz++;
+            rmatind.push_back(starty + j*n+i); 
+            rmatval.push_back(1.0); 
+            numnz++;
 
-               sense.push_back('L');
-               rhs.push_back(3*bigM-p[k][i]);
-               currMatBeg+=5;
-            }
+            sense.push_back('L');
+            rhs.push_back(1.0);
+            currMatBeg+=2;
          }
+      }
 
       // vector<string> to char**
       char** rname = new char* [rowname.size()];
       for (int index = 0; index < rowname.size(); index++) {
+         rname[index] = const_cast<char*>(rowname[index].c_str());
+      }
+      status = CPXaddrows(env, lp, 0, numrows, numnz, &rhs[0], &sense[0], &rmatbeg[0], &rmatind[0], &rmatval[0], NULL, rname);
+      delete[] rname;
+      if (status)  goto TERMINATE;
+   }
+
+   // vertical constraints i v j
+   {
+      currMatBeg = 0;
+      numrows = numnz = 0;
+      rmatbeg.clear();
+      rowname.clear();
+      rmatind.clear();
+      rmatval.clear();
+      sense.clear();
+      rhs.clear();
+      for(i=0;i<n;i++) 
+      {  for(j=0;j<n;j++)
+         {  if(j==i) continue;
+
+            rmatbeg.push_back(currMatBeg);
+            rowname.push_back("v"+to_string(i)+to_string(j)); 
+            numrows++;
+
+            rmatind.push_back(startz + i*n+j); 
+            rmatval.push_back(1.0); 
+            numnz++;
+            rmatind.push_back(startz + j*n+i); 
+            rmatval.push_back(1.0); 
+            numnz++;
+
+            sense.push_back('L');
+            rhs.push_back(1.0);
+            currMatBeg+=2;
+         }
+      }
+
+      // vector<string> to char**
+      char** rname = new char* [rowname.size()];
+      for (int index = 0; index < rowname.size(); index++) {
+         rname[index] = const_cast<char*>(rowname[index].c_str());
+      }
+      status = CPXaddrows(env, lp, 0, numrows, numnz, &rhs[0], &sense[0], &rmatbeg[0], &rmatind[0], &rmatval[0], NULL, rname);
+      delete[] rname;
+      if (status)  goto TERMINATE;
+   }
+
+   // sopra o sinistra yij + yji + zij + zji = 1
+   {
+      currMatBeg = 0;
+      numrows = numnz = 0;
+      rmatbeg.clear();
+      rowname.clear();
+      rmatind.clear();
+      rmatval.clear();
+      sense.clear();
+      rhs.clear();
+      for(i=0;i<n;i++) 
+      {  for(j=0;j<n;j++)
+         {  if(j==i) continue;
+
+            rmatbeg.push_back(currMatBeg);
+            rowname.push_back("ss"+to_string(i)+to_string(j)); 
+            numrows++;
+
+            rmatind.push_back(starty + i*n+j); 
+            rmatval.push_back(1.0); 
+            numnz++;
+            rmatind.push_back(starty + j*n+i); 
+            rmatval.push_back(1.0); 
+            numnz++;
+            rmatind.push_back(startz + i*n+j); 
+            rmatval.push_back(1.0); 
+            numnz++;
+            rmatind.push_back(startz + j*n+i); 
+            rmatval.push_back(1.0); 
+            numnz++;
+
+            sense.push_back('E');
+            rhs.push_back(1.0);
+            currMatBeg+=4;
+         }
+      }
+
+      // vector<string> to char**
+      char** rname = new char* [rowname.size()];
+      for (int index = 0; index < rowname.size(); index++) {
+         rname[index] = const_cast<char*>(rowname[index].c_str());
+      }
+      status = CPXaddrows(env, lp, 0, numrows, numnz, &rhs[0], &sense[0], &rmatbeg[0], &rmatind[0], &rmatval[0], NULL, rname);
+      delete[] rname;
+      if (status)  goto TERMINATE;
+   }
+
+   // starting times sj - si - pik >= T (yij - 1), j dopo i
+   {
+      currMatBeg = 0;
+      numrows = numnz = 0;
+      rmatbeg.clear();
+      rowname.clear();
+      rmatind.clear();
+      rmatval.clear();
+      sense.clear();
+      rhs.clear();
+      for (i=0;i<n;i++)
+         for (j=0;j<n;j++)
+            for(k=0;k<m;k++)
+            {  if (j==i) continue;
+
+               rmatbeg.push_back(currMatBeg);
+               rowname.push_back("s"+to_string(i)+to_string(j)+to_string(k));
+               numrows++;
+
+               rmatind.push_back(starts+j);
+               rmatval.push_back(1.0);
+               numnz++;
+               rmatind.push_back(starts+i);
+               rmatval.push_back(-1.0);
+               numnz++;
+               rmatind.push_back(starty+i*n+j);
+               rmatval.push_back(-Tsup);
+               numnz++;
+
+               sense.push_back('G');
+               rhs.push_back(p[k][i] - Tsup);
+               currMatBeg+=3;
+            }
+      // vector<string> to char**
+      char** rname = new char* [rowname.size()];
+      for (int index = 0; index<rowname.size(); index++) {
+         rname[index] = const_cast<char*>(rowname[index].c_str());
+      }
+      status = CPXaddrows(env, lp, 0, numrows, numnz, &rhs[0], &sense[0], &rmatbeg[0], &rmatind[0], &rmatval[0], NULL, rname);
+      delete[] rname;
+      if (status)  goto TERMINATE;
+   }
+
+   // z vars, i sopra j
+   {  int bigS = m;  // per capirci, num di aree (machines)
+      currMatBeg = 0;
+      numrows = numnz = 0;
+      rmatbeg.clear();
+      rowname.clear();
+      rmatind.clear();
+      rmatval.clear();
+      sense.clear();
+      rhs.clear();
+      for (i=0;i<n;i++)
+         for (j=0;j<n;j++)
+         {  if (j==i) continue;
+            rmatbeg.push_back(currMatBeg);
+            rowname.push_back("vz"+to_string(i)+to_string(j));
+            numrows++;
+
+            for(k=0;k<m;k++)
+            {  rmatind.push_back(startx+j*m+k);
+               rmatval.push_back(k);
+               numnz++;
+            }
+            for(k=0;k<m;k++)
+            {
+               rmatind.push_back(startx+i*m+k);
+               rmatval.push_back(-k);
+               numnz++;
+            }
+            rmatind.push_back(startz+i*m+j);
+            rmatval.push_back(bigS);
+            numnz++;
+
+            sense.push_back('G');
+            rhs.push_back(-bigS+1);
+            currMatBeg+=2*m+1;
+         }
+      // vector<string> to char**
+      char** rname = new char* [rowname.size()];
+      for (int index = 0; index<rowname.size(); index++) {
          rname[index] = const_cast<char*>(rowname[index].c_str());
       }
       status = CPXaddrows(env, lp, 0, numrows, numnz, &rhs[0], &sense[0], &rmatbeg[0], &rmatind[0], &rmatval[0], NULL, rname);
@@ -418,13 +591,13 @@ int MIP2::populateTableau(CPXENVptr env, CPXLPptr lp, int bigM)
 } 
 
 // Helper function to name variables
-string MIP2::var(const string& base, int i, int j = -1) 
+string MIP3::var(const string& base, int i, int j = -1) 
 {  if (j == -1) return base + "_" + to_string(i);
    return base + "_" + to_string(i) + "_" + to_string(j);
 }
 
 // calcola il tempo necessario per caricare il camion j sull'area i
-int MIP2::computeTimeRequest(int i, int j)
+int MIP3::computeTimeRequest(int i, int j)
 {  int k;
    double tload,t=0;
 
@@ -437,7 +610,7 @@ int MIP2::computeTimeRequest(int i, int j)
 }
 
 // Function to call CPLEX and solve the model
-tuple<int,int,int,float,float,double,double> MIP2::callCPLEX(int timeLimit, bool isVerbose)
+tuple<int,int,int,float,float,double,double> MIP3::callCPLEX(int timeLimit, bool isVerbose)
 {  int      solstat;
    double   objval,zlb,lbfinal;
    vector<double> x;
@@ -565,7 +738,7 @@ tuple<int,int,int,float,float,double,double> MIP2::callCPLEX(int timeLimit, bool
    solstat = CPXgetstat(env, lp);
    cout << "Solution status = " << solstat << endl;
 
-   status = CPXgetobjval(env, lp, &objval);
+    status = CPXgetobjval(env, lp, &objval);
    if (status) 
    {  cout << "No MIP objective value available.  Exiting..." << endl; goto TERMINATE; }
 

@@ -1,6 +1,7 @@
 #include "common.h"
 #include "MIP1.h"
 #include "MIP2.h"
+#include "MIP3.h"
 
 // globals
 int m;   // number of areas
@@ -132,6 +133,7 @@ int main()
 
    MIP1 M1;
    MIP2 M2;
+   MIP3 M3;
 
    srand(995);
    //srand(time(NULL));
@@ -160,5 +162,7 @@ int main()
    M1.forkLiftSpeed = forkLiftSpeed;
    //M1.run_MIP1(TimeLimit,isVerbose);
    M2.forkLiftSpeed = forkLiftSpeed;
-   M2.run_MIP2(TimeLimit,isVerbose);
+   //M2.run_MIP2(TimeLimit,isVerbose);
+   M3.forkLiftSpeed = forkLiftSpeed;
+   M3.run_MIP3(TimeLimit,isVerbose);
 }
