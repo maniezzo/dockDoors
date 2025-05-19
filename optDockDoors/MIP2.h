@@ -15,6 +15,7 @@ class MIP2
 
    public:
       vector<vector<int>> cost,p;
+      vector<int> r,d;
       double forkLiftSpeed;
       std::vector<std::vector<int>> sol;
 
