@@ -1,14 +1,15 @@
 { 
    "requestsFile" : "../genDockInstances/requests.csv",
    "distanceFile" : "../genDockInstances/distances.csv",
+   "tWindowsFile" : "../genDockInstances/tWindows.csv",
    "solFile"   : "results_det.txt",
    "numScen"   : 100,
    "epsCost"   : 1000000,
    "TimeLimit" : 3600,
    "nrep"      : 5,
-   "tmax"      : 50400,  "cmtTmax" : "tempo complessivo disponibile in secondi",
-   "forkLiftSpeed" : 1.5,     "cmntNmult" : "velocita madia carrelli in m/s",
-   "isQtest"   : false, "cmntQ" : "generate and test different q distributions",
+   "tmax"      : 50400,   "cmtTmax" : "tempo complessivo disponibile in secondi",
+   "forkLiftSpeed" : 1.5, "cmntNmult" : "velocita madia carrelli in m/s",
+   "isQtest"   : false,   "cmntQ" : "generate and test different q distributions",
    "isVerbose" : false,
    "isDetmnst" : true
 }

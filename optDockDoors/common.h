@@ -21,6 +21,7 @@ extern int n;   // number of trucks
 extern int tmax;// time horizon in seconds, capacity
 extern vector<vector<int>> dist;
 extern vector<vector<int>> req;
+extern vector<vector<int>> tw;
 extern string solFile; // global
 
 // Structure to hold callback data, including timing information

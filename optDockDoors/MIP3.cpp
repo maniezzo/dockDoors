@@ -23,16 +23,26 @@ void MIP3::run_MIP3(int timeLimit, bool isVerbose)
             cost[i][j] = 1;
    }
 
+   r.resize(n);
+   d.resize(n);
+   for (j=0;j<n;j++)
+   {  r[j] = tw[j][0];
+      d[j] = tw[j][1];
+   }
+
    sol.resize(m);
 
-   n = 4; // number of jobs (trucks)
-   m = 2; // number of machines (areas)
+   bool isTest = false;
+   if(isTest)
+   {  n = 4; // number of jobs (trucks)
+      m = 2; // number of machines (areas)
 
-   p = { {1, 2, 3, 4},   // Row 0
-         {5, 6, 7, 8}    // Row 1
-       }; // processing times
-   d = {10, 6, 8, 9}; // due dates
-   r = {5, 3, 1, 4};  // release times
+      p = { {1, 2, 3, 4},   // Row 0
+            {5, 6, 7, 8}    // Row 1
+          }; // processing times
+      d = { 10, 6, 8, 9 }; // due dates
+      r = { 5, 3, 1, 4 };  // release times
+   }
 
    tuple<int,int,int,float,float,double,double> res = callCPLEX(timeLimit,isVerbose);
    checkSol();
@@ -93,17 +103,17 @@ int MIP3::populateTableau(CPXENVptr env, CPXLPptr lp, int bigM)
 
    // ------------------------------------------------------ variables section
    // Variabili: x_ij, z_ij, s_j, c_j, t_j, Tmax
-   int Tsup = 50000; // massima tardiness possibile
+   int Tsup = 150000; // massima tardiness possibile
 
    // Create the columns for x variables, job i assigned to area k
    numcols = 0;
-   startx = 0;
-   for(i=0;i<n;i++)
-      for(k=0;k<m;k++)
+   startx  = 0;
+   for(k=0;k<m;k++)
+      for(i=0;i<n;i++)
          {  obj.push_back(1.0);
             lb.push_back(0.0);  
             ub.push_back(1.0); 
-            colname.push_back("x"+to_string(i)+"_"+to_string(k));
+            colname.push_back("x"+to_string(k)+"_"+to_string(i));
             numcols++;
          }
 
@@ -189,12 +199,12 @@ int MIP3::populateTableau(CPXENVptr env, CPXLPptr lp, int bigM)
       rmatval.clear();
       sense.clear();
       rhs.clear();
-      for(i=0;i<n;i++)
+      for(j=0;j<n;j++)
       {  rmatbeg.push_back(currMatBeg);
-         rowname.push_back("a"+to_string(i)); 
+         rowname.push_back("a"+to_string(j)); 
          numrows++;
          for(k=0;k<m;k++)
-         {  rmatind.push_back(i*m+k); 
+         {  rmatind.push_back(k*n+j); 
             rmatval.push_back(1); 
             numnz++;
          }
@@ -778,7 +788,7 @@ tuple<int,int,int,float,float,double,double> MIP3::callCPLEX(int timeLimit, bool
       }
    cout << endl;
    for(j=0;j<n;j++)
-      cout << "Truck " << j << " tardiness " << x[m*n+n*n+2*n+j] << endl;
+      cout << "Truck " << j << " tardiness " << x[m*n+2*n*n+2*n+j] << endl;
 
    //cout<<"Max tardiness "<<x[m*n+n*n+2*n+n]<<endl; // solo se la penalizzo
 

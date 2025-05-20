@@ -23,16 +23,29 @@ void MIP2::run_MIP2(int timeLimit, bool isVerbose)
             cost[i][j] = 1;
    }
 
+   r.resize(n);
+   d.resize(n);
+   for (j=0;j<n;j++)
+   {  r[j] = tw[j][0];
+      d[j] = tw[j][1];
+   }
+
    sol.resize(m);
 
-   n = 4; // number of jobs (trucks)
-   m = 2; // number of machines (areas)
+   bool isTest = false;
+   if(isTest)
+   {  n = 4; // number of jobs (trucks)
+      m = 2; // number of machines (areas)
 
-   p = { {1, 2, 3, 4},   // Row 0
-         {5, 6, 7, 8}    // Row 1
-       }; // processing times
-   d = {10, 6, 8, 9}; // due dates
-   r = {5, 3, 1, 4};  // release times
+      p = { {1, 2, 3, 4},   // Row 0
+            {5, 6, 7, 8}    // Row 1
+          }; // processing times
+      d = { 10, 6, 8, 9 }; // due dates
+      r = { 5, 3, 1, 4 };  // release times
+   }
+
+   n = 40;
+   m = 20;
 
    tuple<int,int,int,float,float,double,double> res = callCPLEX(timeLimit,isVerbose);
    checkSol();
@@ -93,7 +106,7 @@ int MIP2::populateTableau(CPXENVptr env, CPXLPptr lp, int bigM)
 
    // ------------------------------------------------------ variables section
    // Variabili: x_ij, z_ij, s_j, c_j, t_j, Tmax
-   int Tsup = 50000; // massima tardiness possibile
+   int Tsup = 150000; // massima tardiness possibile
 
    // Create the columns for x variables, job j assigned to area i
    numcols = 0;
@@ -183,8 +196,7 @@ int MIP2::populateTableau(CPXENVptr env, CPXLPptr lp, int bigM)
          rowname.push_back("a"+to_string(j)); 
          numrows++;
          for(i=0;i<m;i++)
-         {
-            rmatind.push_back(i*n+j); 
+         {  rmatind.push_back(i*n+j); 
             rmatval.push_back(1); 
             numnz++;
          }
@@ -498,8 +510,12 @@ tuple<int,int,int,float,float,double,double> MIP2::callCPLEX(int timeLimit, bool
    // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> LP <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
    cout<<"Solving LP relaxation..."<<endl;
    status = CPXlpopt(env, lp);
-   if (status) 
-   {  cout << "Failed to optimize LP." << endl; goto TERMINATE; }
+   if (status) {cout << "Failed to optimize LP." << endl; goto TERMINATE;}
+   status = CPXgetobjval(env, lp, &objval);  // Get objective value
+
+   // Write the output to the screen.
+   cout << "Solution status = " << status << endl;
+   cout << "Solution value  = " << objval << endl;
 
    // save solutions
    for(j=0;j<cur_numcols;j++)
@@ -512,14 +528,7 @@ tuple<int,int,int,float,float,double,double> MIP2::callCPLEX(int timeLimit, bool
       slack.push_back(0);  // constraint slacks
    }
 
-   status = CPXsolution(env, lp, &solstat, &objval, &x[0], &pi[0], &slack[0], &dj[0]);
-   if (status) 
-   {  cout << "Failed to obtain solution." << endl; goto TERMINATE; }
-
    zlb = objval;
-   // Write the output to the screen.
-   cout << "Solution status = " << solstat << endl;
-   cout << "Solution value  = " << objval << endl;
    //for (i = 0; i < cur_numrows; i++) 
    //   cout << "Row "<< i << ":  Slack = "<< slack[i] <<"  Pi = " << pi[i] << endl;
 

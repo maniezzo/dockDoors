@@ -9,10 +9,12 @@ int n;   // number of trucks
 int tmax;// capacity
 vector<vector<int>> dist;
 vector<vector<int>> req;
+vector<vector<int>> tw;
 string solFile; // global
 
-int readInstance(string distanceFile, string requestsFile)
+int readInstance(string distanceFile, string requestsFile, string tWindowsFile)
 {  string line;
+   int cont;
 
    // read distances among areas
    ifstream file(distanceFile);
@@ -22,7 +24,7 @@ int readInstance(string distanceFile, string requestsFile)
    }
 
    getline(file, line); // skip header
-   m = 0;
+   m = cont = 0;
    while (getline(file, line)) 
    {  vector<int> row;
       stringstream ss(line);
@@ -32,16 +34,18 @@ int readInstance(string distanceFile, string requestsFile)
          row.push_back(stoi(cell));
 
       dist.push_back(row);
-      m++;
+      m++; 
    }
    file.close();
 
    // Print distance data to verify
    cout<<"Distance matrix:"<<endl;
    for (const auto& row : dist) 
-   {  for (int val : row)
+   {  cout << cont << ") ";
+      for (int val : row)
          cout << val << " ";
       cout << endl;
+      cont++;
    }
 
    // read transportation requests
@@ -51,7 +55,7 @@ int readInstance(string distanceFile, string requestsFile)
       return 1;
    }
 
-   n = 0;
+   n = cont = 0;
    getline(fileReq, line); // skip header
    while (getline(fileReq, line)) 
    {  vector<int> row;
@@ -69,14 +73,45 @@ int readInstance(string distanceFile, string requestsFile)
    // Print request data to verify
    cout<<"Request matrix:"<<endl;
    for (const auto& row : req) 
-   {  for (int val : row)
-      cout << val << " ";
+   {  cout << cont << ") ";
+      for (int val : row)
+         cout << val << " ";
       cout << endl;
+      cont++;
    }
 
+   // read time windows
+   ifstream fileTW(tWindowsFile);
+   if (!fileTW.is_open()) 
+   {  cout << "Failed to open file: " << tWindowsFile << endl;
+      return 1;
+   }
+   
+   cont = 0;
+   getline(fileTW, line); // skip header
+   while (getline(fileTW, line)) 
+   {  vector<int>  row;
+      stringstream ss(line);
+      string cell;
+
+      while (getline(ss, cell, ',')) 
+         row.push_back(stoi(cell));
+
+      tw.push_back(row);
+   }
+   fileTW.close();
+
+   // Print time windows data to verify
+   cout<<"Time windows matrix:"<<endl;
+   for (const auto& row : tw) 
+   {  cout << cont << ") ";
+      for (int val : row)
+         cout << val << " ";
+      cout << endl;
+      cont++;
+   }
    return 0;
 }
-
 
 // callback, returns lower and upper bounds
 int CPXPUBLIC myCallbackFunction(CPXCENVptr env, void* cbdata, int wherefrom, void* cbhandle)
@@ -127,7 +162,7 @@ int CPXPUBLIC myCallbackFunction(CPXCENVptr env, void* cbdata, int wherefrom, vo
 }
 
 int main()
-{  string requestsFile,distanceFile;
+{  string requestsFile,distanceFile,tWindowsFile;
    string line,inst;
    stringstream ss;
 
@@ -151,6 +186,7 @@ int main()
 
    requestsFile   = JSV["requestsFile"];
    distanceFile   = JSV["distanceFile"];
+   tWindowsFile   = JSV["tWindowsFile"];
    string solFile = JSV["solFile"];
    tmax           = JSV["tmax"];         // tempo disponibile caricamento camion, in secondi. Capacità aree
    int TimeLimit  = JSV["TimeLimit"];    // CPLEX time limit
@@ -158,11 +194,11 @@ int main()
    double forkLiftSpeed = JSV["forkLiftSpeed"]; // velocità carrelli
    bool isVerbose = JSV["isVerbose"];
 
-   readInstance(distanceFile,requestsFile);
+   readInstance(distanceFile,requestsFile,tWindowsFile);
    M1.forkLiftSpeed = forkLiftSpeed;
    //M1.run_MIP1(TimeLimit,isVerbose);
    M2.forkLiftSpeed = forkLiftSpeed;
-   //M2.run_MIP2(TimeLimit,isVerbose);
+   M2.run_MIP2(TimeLimit,isVerbose);
    M3.forkLiftSpeed = forkLiftSpeed;
    M3.run_MIP3(TimeLimit,isVerbose);
 }
