@@ -5,6 +5,7 @@
 void MIP3::run_MIP3(int timeLimit, bool isVerbose)
 {  int i,j;
 
+   cout << "Running model MIP3" << endl;
    // ---------------------------------------------------- Define the model
    p.resize(m); // Resize to m rows
    for (i = 0; i < m; ++i) 
@@ -47,7 +48,7 @@ void MIP3::run_MIP3(int timeLimit, bool isVerbose)
    tuple<int,int,int,float,float,double,double> res = callCPLEX(timeLimit,isVerbose);
    checkSol();
 
-   string strInst = "MIP2";
+   string strInst = "MIP3";
    int numScen = 0; 
    int nboost = 0; 
    ostringstream osString;
@@ -83,7 +84,7 @@ lFound: continue;
    }
 }
 
-// The tableau for the basic GAP, non scenario case.
+// The tableau for the M3 formulation, non scenario case.
 int MIP3::populateTableau(CPXENVptr env, CPXLPptr lp, int bigM)
 {  int status,numrows,numcols,numnz;
    int i,j,k,currMatBeg;
@@ -679,7 +680,7 @@ tuple<int,int,int,float,float,double,double> MIP3::callCPLEX(int timeLimit, bool
    //status = CPXwriteprob (env, lp, "probl.lp", NULL);
 
    // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> LP <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-   cout<<"Solving LP relaxation..."<<endl;
+   cout<<"Solving MIP3 LP relaxation..."<<endl;
    status = CPXlpopt(env, lp);
    if (status) 
    {  cout << "Failed to optimize LP." << endl; goto TERMINATE; }
@@ -711,7 +712,7 @@ tuple<int,int,int,float,float,double,double> MIP3::callCPLEX(int timeLimit, bool
    //      cout << "Column " << j << ":  Value = " << x[j] <<"  Reduced cost = " << dj[j] << endl;
 
    // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> MIP <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-   cout<<"Solving MIP..."<<endl;
+   cout<<"Solving MIP3..."<<endl;
    // Now set the ctype array
    for(i=0;i<cur_numcols;i++) ctype.push_back('C');
    for(i=0;i<m;i++)

@@ -5,6 +5,7 @@
 void MIP2::run_MIP2(int timeLimit, bool isVerbose)
 {  int i,j;
 
+   cout << "Running model MIP2" << endl;
    // ---------------------------------------------------- Define the model
    p.resize(m); // Resize to m rows
    for (i = 0; i < m; ++i) 
@@ -508,7 +509,7 @@ tuple<int,int,int,float,float,double,double> MIP2::callCPLEX(int timeLimit, bool
    //status = CPXwriteprob (env, lp, "probl.lp", NULL);
 
    // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> LP <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-   cout<<"Solving LP relaxation..."<<endl;
+   cout<<"Solving MIP2 LP relaxation..."<<endl;
    status = CPXlpopt(env, lp);
    if (status) {cout << "Failed to optimize LP." << endl; goto TERMINATE;}
    status = CPXgetobjval(env, lp, &objval);  // Get objective value
@@ -537,7 +538,7 @@ tuple<int,int,int,float,float,double,double> MIP2::callCPLEX(int timeLimit, bool
    //      cout << "Column " << j << ":  Value = " << x[j] <<"  Reduced cost = " << dj[j] << endl;
 
    // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> MIP <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-   cout<<"Solving MIP..."<<endl;
+   cout<<"Solving MIP2..."<<endl;
    // Now set the ctype array
    for(i=0;i<cur_numcols;i++) ctype.push_back('C');
    for(i=0;i<m;i++)

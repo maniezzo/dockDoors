@@ -175,6 +175,50 @@ def main_fcast(name, df, idseries=0, step = 28, model='AR', distrib='AR', fback=
          fout.write(f"{iboostset},{model},{df.iloc[-1,iboostset]},{fcast_50},{fcast_avg},{fcast_05},{fcast_95},{yar},{yhw},{ysvm[-1]},{ylstm},{ymlp},{yrf},{yxgb},{yarima}\n")
    print("finito")
 
+def plotComparison(verbose):
+   # Open the data file in read mode
+   with open('data.csv', 'r') as file:
+      count = 0
+      fcast_all = []
+      for line in file:
+         if(count>0):
+            elem = line.strip().split(',')
+            if(count < 50): fcast_all.append(float(elem[1]))
+            else:
+               globals()[elem[0]] = float(elem[1])
+            print(elem)  # This will print the list of parts for each line
+         count +=1
+   
+   fcast_all = np.sort(fcast_all)
+   fcast_avg = np.average(fcast_all)
+   
+   # intervallo = 5 - 95
+   fcast_05 = fcast_all[int(len(fcast_all) / 100 * 5)]  # 125/100*5
+   fcast_95 = fcast_all[int(len(fcast_all) / 100 * 95)]  #
+   fcast_50 = fcast_all[int(len(fcast_all) / 100 * 50)]
+   
+   if verbose:
+      plt.hist(fcast_all, color='lightgreen', ec='black', bins=15)
+      plt.xlabel("Values")
+      plt.ylabel("Frequency")
+      plt.axvline(x=fcast_50, color='gray', linestyle='-', linewidth=3, label='Median')
+      plt.axvline(x=fcast_avg, color='gray', linestyle='--', label='Average')
+      #plt.axvline(x=fcast_05, color='gray', linestyle='-', label='0.05')
+      #plt.axvline(x=fcast_95, color='gray', linestyle='-', label='0.95')
+      plt.axvline(x=19, color='red', linestyle='-', label='true val')
+      plt.axvline(x=yar, color='b', linestyle=':', label='AR')
+      plt.axvline(x=yhw, color='g', linestyle=':', label='HW')
+      plt.axvline(x=ysvm, color='c', linestyle=':', label='SVM')
+      plt.axvline(x=ylstm, color='m', linestyle=':', label='LSTM')
+      plt.axvline(x=ymlp, color='y', linestyle=':', label='MLP')
+      plt.axvline(x=yrf, color='r', linestyle=':', label='RF')
+      plt.axvline(x=yxgb, color='k', linestyle=':', label='XGB')
+      plt.axvline(x=yarima, color='purple', linestyle=':', label='ARIMA')
+      plt.title(f"Distribution of forecast Values, series {54}")
+      plt.legend()
+      plt.show()
+   return
+
 if __name__ == "__main__":
    name = "flows"
    df2 = pd.read_csv(f"../data/{name}.csv")
@@ -192,4 +236,5 @@ if __name__ == "__main__":
    step  = conf['stepcust']       # these many customers after idcustomer
    verbose = conf['verbose']
    p     = 5
+   plotComparison(verbose) # just for the slide
    main_fcast(name, df2.iloc[:-3,:], idseries=idcustomer, step=step, model=model, distrib=distrib, fback=fback, frep=frep, nboost=nboost, p=p, verbose=verbose)
