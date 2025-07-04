@@ -34,3 +34,39 @@ MSE res_YW_AR_125 ranks [4.2 4.3 4.4 4.6 4.7 4.9 5.4 6.4 7.7 8.4]
 BIAS res_YW_AR_125 ranks ['yrf' 'yxgb' 'fcast_50' 'yhw' 'yarima' 'ylstm' 'yar' 'ymlp' 'ysvm'
  'fcast_avg']
 BIAS res_YW_AR_125 ranks [3.9 3.9 4.2 4.9 5.2 5.5 6.2 6.2 7.3 7.7]
+MAE res_YW_AR_125 ranks ['fcast_50' 'yarima' 'yhw' 'ylstm' 'yar' 'ymlp' 'yrf' 'yxgb' 'fcast_avg'
+ 'ysvm']
+MAE res_YW_AR_125 ranks [4.2 4.3 4.4 4.6 4.7 4.9 5.4 6.4 7.7 8.4]
+MSE res_YW_AR_125 ranks ['fcast_50' 'yarima' 'yhw' 'ylstm' 'yar' 'ymlp' 'yrf' 'yxgb' 'fcast_avg'
+ 'ysvm']
+MSE res_YW_AR_125 ranks [4.2 4.3 4.4 4.6 4.7 4.9 5.4 6.4 7.7 8.4]
+BIAS res_YW_AR_125 ranks ['yrf' 'yxgb' 'fcast_50' 'yhw' 'yarima' 'ylstm' 'yar' 'ymlp' 'ysvm'
+ 'fcast_avg']
+BIAS res_YW_AR_125 ranks [3.9 3.9 4.2 4.9 5.2 5.5 6.2 6.2 7.3 7.7]
+MAE res_YW_AR_75 ranks ['fcast_50' 'yarima' 'yhw' 'ylstm' 'yar' 'ymlp' 'yrf' 'yxgb' 'fcast_avg'
+ 'ysvm']
+MAE res_YW_AR_75 ranks [4.2 4.3 4.4 4.6 4.7 4.9 5.4 6.4 7.7 8.4]
+MSE res_YW_AR_75 ranks ['fcast_50' 'yarima' 'yhw' 'ylstm' 'yar' 'ymlp' 'yrf' 'yxgb' 'fcast_avg'
+ 'ysvm']
+MSE res_YW_AR_75 ranks [4.2 4.3 4.4 4.6 4.7 4.9 5.4 6.4 7.7 8.4]
+BIAS res_YW_AR_75 ranks ['yrf' 'yxgb' 'fcast_50' 'yhw' 'yarima' 'ylstm' 'yar' 'ymlp' 'ysvm'
+ 'fcast_avg']
+BIAS res_YW_AR_75 ranks [3.9 3.9 4.2 4.9 5.2 5.5 6.2 6.2 7.3 7.7]
+MAE res_YW_AR_75 ranks ['fcast_50' 'yarima' 'yhw' 'ylstm' 'yar' 'ymlp' 'yrf' 'yxgb' 'fcast_avg'
+ 'ysvm']
+MAE res_YW_AR_75 ranks [4.2 4.3 4.4 4.6 4.7 4.9 5.4 6.4 7.7 8.4]
+MSE res_YW_AR_75 ranks ['fcast_50' 'yarima' 'yhw' 'ylstm' 'yar' 'ymlp' 'yrf' 'yxgb' 'fcast_avg'
+ 'ysvm']
+MSE res_YW_AR_75 ranks [4.2 4.3 4.4 4.6 4.7 4.9 5.4 6.4 7.7 8.4]
+BIAS res_YW_AR_75 ranks ['yrf' 'yxgb' 'fcast_50' 'yhw' 'yarima' 'ylstm' 'yar' 'ymlp' 'ysvm'
+ 'fcast_avg']
+BIAS res_YW_AR_75 ranks [3.9 3.9 4.2 4.9 5.2 5.5 6.2 6.2 7.3 7.7]
+MAE res_YW_AR_125 ranks ['fcast_avg' 'fcast_50' 'yarima' 'ymlp' 'yrf' 'yhw' 'ysvm' 'yxgb' 'yar'
+ 'ylstm']
+MAE res_YW_AR_125 ranks [2.   3.75 4.6  5.   5.5  6.15 6.5  6.85 7.   7.65]
+MSE res_YW_AR_125 ranks ['fcast_avg' 'fcast_50' 'yarima' 'ymlp' 'yrf' 'yhw' 'ysvm' 'yxgb' 'yar'
+ 'ylstm']
+MSE res_YW_AR_125 ranks [2.   3.75 4.6  5.   5.5  6.15 6.5  6.85 7.   7.65]
+BIAS res_YW_AR_125 ranks ['fcast_50' 'fcast_avg' 'ymlp' 'yarima' 'ysvm' 'yhw' 'ylstm' 'yrf' 'yxgb'
+ 'yar']
+BIAS res_YW_AR_125 ranks [3.05 3.25 5.   5.1  5.85 5.95 5.95 6.15 7.2  7.5 ]
