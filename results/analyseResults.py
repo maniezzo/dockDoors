@@ -1,5 +1,5 @@
 import numpy as np, pandas as pd
-import matplotlib.pyplot as plt
+import matplotlib
 from statsmodels.tsa.stattools import acf
 import statsmodels.api as sm
 from critical_difference_diagram import draw_diagram
@@ -54,6 +54,7 @@ def isLinear():
           print(f"Series {i}: p={p_value} No significant lack of fit (linear model is ok).")
 
 def go_analysis():
+   matplotlib.use("TkAgg")
    with open('config.json') as jconf:
       conf = json.load(jconf)
    print(conf)
