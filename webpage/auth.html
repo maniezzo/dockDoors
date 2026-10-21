@@ -1,0 +1,23 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+   <title>Controllo autorizzazione</title>
+   <script type="text/javascript" src="https://l2.io/ip.js?var=myip"></script>
+   <script type="text/javascript">
+      var decstring="",encstring;
+      encstring = location.search.substring(1);
+      for(i=0;i<encstring.length;i++)
+         decstring+=String.fromCharCode(encstring.charCodeAt(i) + 1);
+      var authstring = "<script type=\"text/javascript\" src=\"" + decstring + ".js\"><\/script>";
+      if (location.search) document.write(authstring);
+   </script>
+</head>
+<body>
+   <script type="text/javascript">
+      //if(myip == "137.204.72.125" || myip == "137.204.72.90")
+      //   window.auth ? location.replace(redirect) : location.replace("index.html?auth=failed");
+      //else
+         location.replace("http://astarte.csr.unibo.it:8000/");
+   </script>
+</body>
+</html>

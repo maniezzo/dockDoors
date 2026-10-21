@@ -1,0 +1,55 @@
+<!doctype html>
+<html>
+<head>
+   <script type="text/javascript" src="steganography.js"></script>
+   <script type="text/javascript">
+      var stegImage;
+      
+      function init()
+      {
+         stegImage = new Image();
+         stegImage.crossOrigin = '';    // questo evita il crossdomain
+         stegImage.addEventListener("load", function() {
+            // qui si e' sicuri che l'abbia caricata
+            document.getElementById("img1").innerHTML = '<img src='+stegImage.src+' width="200px">';
+            }, false);
+         stegImage.src = "LogoKeisnaOldSteg.png";         
+      }
+      
+      function decode()
+      {
+         message = document.getElementById("messaggio");
+         var codeText = steg.decode(stegImage);
+         message.innerHTML = codeText;
+         var script = document.createElement('script');
+         script.setAttribute('type', 'text/javascript');
+         script.text = codeText;
+         document.documentElement.firstChild.appendChild(script);
+      }
+      
+      function fnew()
+      {  alert("Accesso non autorizzato");
+      }
+   </script>
+</head>   
+<body onload="init()">
+   <p style="textalign:center">Inner content</p>
+   <table>
+      <tr>
+         <td id="img1"></td>
+      </tr>
+      <tr>
+         <td id="punto1"></td>
+      </tr>
+      <tr>
+         <td><button id="btn1" onclick="decode()">Decode</button></td>
+      </tr>
+      <tr>
+         <td id="messaggio"></td>
+      </tr>
+      <tr>
+         <td><button id="btn2" onclick="fnew()">Prova fnew</button></td>
+      </tr>
+   </table>
+</body>
+</html>

@@ -1,0 +1,19 @@
+Questo sito ha attivi tre tipi di protezioni
+1) Host filtering
+2) User filtering
+3) Code injection
+
+1 - host filtering
+Non è possibile farlo solo client side. E' necessario chiedere a un servizio esterno il proprio ip.
+Qui lo chiedo con lo script 
+   <script type="text/javascript" src="http://l2.io/ip.js?var=myip"></script>
+che setta la variabile globale myip, che poi viene controllata da codice
+
+2 - user filtring
+Forse più complicato di quel che potrebbe essere. In sostanza si delega al web server il controllo di username e pwd.
+index.html: chiede user e pwd, le codifica (! cala di 1 il codice ascii) e le passa a auth.html per l'autenticazione
+auth.html: decodifica usr e pwd e le concatena caricando il file usrpwd.js che dice cosa fare dopo
+usppwd.js: setta le variabili che fanno comodo e passa il controllo a proxy.html
+proxy.html: serve solo ad aprire la pagina finale dentro un iFrame, così non si vede l'indirizzo nella barra in alto
+
+3 - code injection
